@@ -1,43 +1,52 @@
 import { Ionicons } from '@expo/vector-icons';
-import { Tabs, useRouter } from 'expo-router';
-import { TouchableOpacity } from 'react-native';
-import { SvgXml } from 'react-native-svg';
-
-const plusIcon = `<?xml version="1.0" encoding="utf-8"?>
-<svg fill="#000000" height="800px" width="800px" version="1.1" id="Layer_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" 
-	 viewBox="0 0 500 500" enable-background="new 0 0 500 500" xml:space="preserve">
-<g>
-	<path d="M306.6,143.4C291.5,128.3,271.4,120,250,120s-41.5,8.3-56.6,23.4c-31.2,31.2-31.2,81.9,0,113.1
-		c15.1,15.1,35.2,23.4,56.6,23.4s41.5-8.3,56.6-23.4S330,221.4,330,200S321.7,158.5,306.6,143.4z M295.3,245.3
-		C283.2,257.3,267.1,264,250,264s-33.2-6.7-45.3-18.7c-25-25-25-65.6,0-90.5c12.1-12.1,28.2-18.7,45.3-18.7
-		c17.1,0,33.2,6.7,45.3,18.7c12.1,12.1,18.7,28.2,18.7,45.3S307.3,233.2,295.3,245.3z"/>
-	<path d="M282,192h-24v-24c0-4.4-3.6-8-8-8s-8,3.6-8,8v24h-24c-4.4,0-8,3.6-8,8s3.6,8,8,8h24v24c0,4.4,3.6,8,8,8s8-3.6,8-8v-24h24
-		c4.4,0,8-3.6,8-8S286.4,192,282,192z"/>
-</g>
-</svg>`;
+import { Tabs } from 'expo-router';
+import { Platform, View } from 'react-native';
+import { CustomText } from '../../components/CustomText';
+import { useRole } from '../contexts/RoleContext';
 
 export default function TabLayout() {
-  const router = useRouter();
+  const { canAccessDonut, loading, userRole } = useRole();
+
+  // Don't render tabs while loading user role
+  if (loading) {
+    return (
+      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#232323' }}>
+        <CustomText style={{ color: 'white' }}>Loading...</CustomText>
+      </View>
+    );
+  }
 
   return (
     <Tabs
       screenOptions={{
+        tabBarActiveTintColor: '#FFFFFF',
+        tabBarInactiveTintColor: '#888888',
         tabBarShowLabel: false,
         tabBarStyle: {
-          backgroundColor: 'transparent',
+          backgroundColor: '#232323',
           borderTopWidth: 0,
-          height: 10,
+          height: Platform.OS === 'ios' ? 80 : 100,
           position: 'absolute',
           bottom: 0,
-          left: 0,
-          right: 0,
+          left: 16,
+          right: 16,
+          borderRadius: 16,
+          shadowColor: '#000',
+          shadowOffset: { width: 0, height: 4 },
+          shadowOpacity: 0.1,
+          shadowRadius: 6,
+          elevation: 10,
         },
-      }}>
+        tabBarHideOnKeyboard: true,
+      }}
+    >
       <Tabs.Screen
         name="index"
         options={{
-          href: null,
-          title: 'Dashboard',
+          title: 'summary',
+          tabBarIcon: ({ color }) => (
+            <Ionicons name="document-text-outline" size={26} color={color} />
+          ),
           headerStyle: { backgroundColor: '#232323' },
           headerTitleStyle: { color: 'white', fontWeight: 'bold' },
           headerTitleAlign: 'center',
@@ -48,30 +57,38 @@ export default function TabLayout() {
         name="add"
         options={{
           title: '',
-          tabBarIcon: ({ color }) => (
-            <SvgXml
-              xml={plusIcon}
-              width={100}
-              height={100}
-              color={color}
+          tabBarIcon: () => (
+            <View
               style={{
-                position: 'absolute',
-                bottom: 10,
-                alignSelf: 'center',
-              }}
-            />
+                width: 60,
+                height: 60,
+                borderRadius: 30,
+                backgroundColor: '#FFFFFF',
+                justifyContent: 'center',
+                alignItems: 'center',
+                marginBottom: Platform.OS === 'ios' ? 30 : 20,
+                shadowColor: '#000',
+                shadowOffset: { width: 0, height: 4 },
+                shadowOpacity: 0.3,
+                shadowRadius: 4.65,
+                elevation: 8,
+              }}>
+              <Ionicons name="add" size={36} color="#232323" />
+            </View>
           ),
-          headerLeft: () => (
-            <TouchableOpacity 
-              onPress={() => router.back()}
-              style={{ marginLeft: 15 }}
-            >
-              <Ionicons name="arrow-back" size={24} color="white" />
-            </TouchableOpacity>
+        }}
+      />
+      <Tabs.Screen
+        name="donut"
+        options={{
+          title: 'Cashflow',
+          tabBarIcon: ({ color }) => (
+            <Ionicons name="pie-chart-outline" size={26} color={color} />
           ),
-          tabBarStyle: {
-            display: 'none'
-          }
+          headerStyle: { backgroundColor: '#232323' },
+          headerTitleStyle: { color: 'white', fontWeight: 'bold' },
+          headerTitleAlign: 'center',
+          headerTintColor: 'white',
         }}
       />
     </Tabs>

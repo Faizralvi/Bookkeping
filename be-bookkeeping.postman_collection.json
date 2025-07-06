@@ -1,0 +1,567 @@
+{
+	"info": {
+		"_postman_id": "e296e4ff-853d-432d-b367-cf185bd1432a",
+		"name": "be-bookkeeping",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "34705584"
+	},
+	"item": [
+		{
+			"name": "auth",
+			"item": [
+				{
+					"name": "register",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"name\": \"asep\",\r\n    \"email\": \"asep@gmail.com\",\r\n    \"password\": \"asep1234\",\r\n    \"role\": \"usahawan\"\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "localhost:3000/api/register",
+							"host": [
+								"localhost"
+							],
+							"port": "3000",
+							"path": [
+								"api",
+								"register"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "login",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"name\": \"asep\",\r\n    \"email\": \"asep@gmail.com\",\r\n    \"password\": \"asep124\",\r\n    \"role\": \"usahawan\"\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "localhost:3000/api/login",
+							"host": [
+								"localhost"
+							],
+							"port": "3000",
+							"path": [
+								"api",
+								"login"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "income",
+			"item": [
+				{
+					"name": "get income",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJuYW1lIjoiYXNlcCIsImVtYWlsIjoiYXNlcEBnbWFpbC5jb20iLCJ1c2VySWQiOjEsInJvbGUiOiJ1c2FoYXdhbiIsImlhdCI6MTc0OTA1MTQxOCwiZXhwIjoxNzQ5MTM3ODE4fQ.EMGQg40o4FrgCYNB9RwD4prmZsl9tNMwPHYcaj4CNL4",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"name\": \"asep\",\r\n    \"email\": \"asep@gmail.com\",\r\n    \"password\": \"asep124\",\r\n    \"role\": \"usahawan\"\r\n}"
+						},
+						"url": {
+							"raw": "localhost:3000/api/income?type=main&filter=monthly",
+							"host": [
+								"localhost"
+							],
+							"port": "3000",
+							"path": [
+								"api",
+								"income"
+							],
+							"query": [
+								{
+									"key": "type",
+									"value": "main"
+								},
+								{
+									"key": "filter",
+									"value": "monthly"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "create income",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJuYW1lIjoiYXNlcCIsImVtYWlsIjoiYXNlcEBnbWFpbC5jb20iLCJ1c2VySWQiOjMsInJvbGUiOiJ1c2FoYXdhbiIsImlhdCI6MTc1MDA4NjUxMCwiZXhwIjoxNzUwMTcyOTEwfQ.t9GxpguGIu1o6UvsBAfjE_DPYHbWiCqsdfXajsqj8yY",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"type\": \"main\",\r\n   \r\n    \"description\": \"\"\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "localhost:3000/api/income",
+							"host": [
+								"localhost"
+							],
+							"port": "3000",
+							"path": [
+								"api",
+								"income"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "update income",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJuYW1lIjoiYXNlcCIsImVtYWlsIjoiYXNlcEBnbWFpbC5jb20iLCJ1c2VySWQiOjMsInJvbGUiOiJ1c2FoYXdhbiIsImlhdCI6MTc1MDA4NjUxMCwiZXhwIjoxNzUwMTcyOTEwfQ.t9GxpguGIu1o6UvsBAfjE_DPYHbWiCqsdfXajsqj8yY",
+									"type": "string"
+								}
+							]
+						},
+						"method": "PUT",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"type\": \"main\",\r\n    \"amount\": 1000,\r\n    \"description\": \"\"\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "localhost:3000/api/income",
+							"host": [
+								"localhost"
+							],
+							"port": "3000",
+							"path": [
+								"api",
+								"income"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "delete income",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJuYW1lIjoiYXNlcCIsImVtYWlsIjoiYXNlcEBnbWFpbC5jb20iLCJ1c2VySWQiOjMsInJvbGUiOiJ1c2FoYXdhbiIsImlhdCI6MTc1MDA4NjUxMCwiZXhwIjoxNzUwMTcyOTEwfQ.t9GxpguGIu1o6UvsBAfjE_DPYHbWiCqsdfXajsqj8yY",
+									"type": "string"
+								}
+							]
+						},
+						"method": "DELETE",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"type\": \"main\",\r\n    \"amount\": 1000,\r\n    \"description\": \"\"\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "localhost:3000/api/income/7",
+							"host": [
+								"localhost"
+							],
+							"port": "3000",
+							"path": [
+								"api",
+								"income",
+								"7"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "get income info",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJuYW1lIjoiYXNlcCIsImVtYWlsIjoiYXNlcEBnbWFpbC5jb20iLCJ1c2VySWQiOjMsInJvbGUiOiJ1c2FoYXdhbiIsImlhdCI6MTc1MDA4NjUxMCwiZXhwIjoxNzUwMTcyOTEwfQ.t9GxpguGIu1o6UvsBAfjE_DPYHbWiCqsdfXajsqj8yY",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "localhost:3000/api/income?filter=monthly&type=\"main\"",
+							"host": [
+								"localhost"
+							],
+							"port": "3000",
+							"path": [
+								"api",
+								"income"
+							],
+							"query": [
+								{
+									"key": "filter",
+									"value": "monthly"
+								},
+								{
+									"key": "type",
+									"value": "\"main\""
+								}
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "liability",
+			"item": [
+				{
+					"name": "get liability",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJuYW1lIjoiYXNlcCIsImVtYWlsIjoiYXNlcEBnbWFpbC5jb20iLCJ1c2VySWQiOjMsInJvbGUiOiJ1c2FoYXdhbiIsImlhdCI6MTc1MDE0NTExOCwiZXhwIjoxNzUwMjMxNTE4fQ.kkOmkRT5siJ4OFI9UE_M4WKot0Gwvjx0QVJbY3DYijw",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"name\": \"asep\",\r\n    \"email\": \"asep@gmail.com\",\r\n    \"password\": \"asep124\",\r\n    \"role\": \"usahawan\"\r\n}"
+						},
+						"url": {
+							"raw": "localhost:3000/api/liability",
+							"host": [
+								"localhost"
+							],
+							"port": "3000",
+							"path": [
+								"api",
+								"liability"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "create income",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJuYW1lIjoiYXNlcCIsImVtYWlsIjoiYXNlcEBnbWFpbC5jb20iLCJ1c2VySWQiOjMsInJvbGUiOiJ1c2FoYXdhbiIsImlhdCI6MTc1MDA4NjUxMCwiZXhwIjoxNzUwMTcyOTEwfQ.t9GxpguGIu1o6UvsBAfjE_DPYHbWiCqsdfXajsqj8yY",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"liabilityType\": \"main\",\r\n    \"liabilityCategory\": \"hutang\",\r\n    \"amount\": 2000,\r\n    \"description\": \"\"\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "localhost:3000/api/liability",
+							"host": [
+								"localhost"
+							],
+							"port": "3000",
+							"path": [
+								"api",
+								"liability"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "update income",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJuYW1lIjoiYXNlcCIsImVtYWlsIjoiYXNlcEBnbWFpbC5jb20iLCJ1c2VySWQiOjMsInJvbGUiOiJ1c2FoYXdhbiIsImlhdCI6MTc1MDA4NjUxMCwiZXhwIjoxNzUwMTcyOTEwfQ.t9GxpguGIu1o6UvsBAfjE_DPYHbWiCqsdfXajsqj8yY",
+									"type": "string"
+								}
+							]
+						},
+						"method": "PUT",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"type\": \"main\",\r\n    \"amount\": 1000,\r\n    \"description\": \"\"\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "localhost:3000/api/income",
+							"host": [
+								"localhost"
+							],
+							"port": "3000",
+							"path": [
+								"api",
+								"income"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "delete income",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJuYW1lIjoiYXNlcCIsImVtYWlsIjoiYXNlcEBnbWFpbC5jb20iLCJ1c2VySWQiOjMsInJvbGUiOiJ1c2FoYXdhbiIsImlhdCI6MTc1MDA4NjUxMCwiZXhwIjoxNzUwMTcyOTEwfQ.t9GxpguGIu1o6UvsBAfjE_DPYHbWiCqsdfXajsqj8yY",
+									"type": "string"
+								}
+							]
+						},
+						"method": "DELETE",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"type\": \"main\",\r\n    \"amount\": 1000,\r\n    \"description\": \"\"\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "localhost:3000/api/income/7",
+							"host": [
+								"localhost"
+							],
+							"port": "3000",
+							"path": [
+								"api",
+								"income",
+								"7"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "get income info",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJuYW1lIjoiYXNlcCIsImVtYWlsIjoiYXNlcEBnbWFpbC5jb20iLCJ1c2VySWQiOjMsInJvbGUiOiJ1c2FoYXdhbiIsImlhdCI6MTc1MDA4NjUxMCwiZXhwIjoxNzUwMTcyOTEwfQ.t9GxpguGIu1o6UvsBAfjE_DPYHbWiCqsdfXajsqj8yY",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "localhost:3000/api/income?filter=monthly&type=\"main\"",
+							"host": [
+								"localhost"
+							],
+							"port": "3000",
+							"path": [
+								"api",
+								"income"
+							],
+							"query": [
+								{
+									"key": "filter",
+									"value": "monthly"
+								},
+								{
+									"key": "type",
+									"value": "\"main\""
+								}
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "spend",
+			"item": [
+				{
+					"name": "get spending",
+					"request": {
+						"method": "GET",
+						"header": []
+					},
+					"response": []
+				},
+				{
+					"name": "create spending",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"spendingType\": \"stock\",\r\n    \"amount\": 1000,\r\n    \"description\": \"\"\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "localhost:3000/api/spend",
+							"host": [
+								"localhost"
+							],
+							"port": "3000",
+							"path": [
+								"api",
+								"spend"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "update spending",
+					"request": {
+						"method": "PUT",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"spendingType\": \"stock\",\r\n    \"amount\": 3000,\r\n    \"description\": \"\"\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "localhost:3000/api/spend/1",
+							"host": [
+								"localhost"
+							],
+							"port": "3000",
+							"path": [
+								"api",
+								"spend",
+								"1"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "delete spending",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"spendingType\": \"stock\",\r\n    \"amount\": 3000,\r\n    \"description\": \"\"\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "localhost:3000/api/spend/1",
+							"host": [
+								"localhost"
+							],
+							"port": "3000",
+							"path": [
+								"api",
+								"spend",
+								"1"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		}
+	]
+}

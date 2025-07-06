@@ -1,218 +1,303 @@
 import { Ionicons } from '@expo/vector-icons';
+import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import { useRouter } from 'expo-router';
-import { useEffect, useState } from 'react';
-import { Dimensions, ScrollView, TouchableOpacity, View } from 'react-native';
-import { LineChart } from 'react-native-chart-kit';
+import React from 'react';
+import { ScrollView, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { CustomText } from '../../components/CustomText';
-import { getEntries } from '../../lib/utils/storage';
+import { NetProfitChart } from '../../components/charts/NetProfitLineChart';
+import { incomeAPI, spendingAPI, userAPI } from '../../lib/utils/api';
+import { logout } from '../../lib/utils/auth';
+import { Language, useLanguage } from '../contexts/LanguageContext';
 
-// Define BookkeepingEntry type here if not exported from storage
-// Remove this if you export BookkeepingEntry from storage.ts
-
-type BookkeepingEntry = {
-  type: 'income' | 'expense' | 'asset' | 'liability' | 'equity';
-  date: string;
-  mainIncome?: string;
-  sideIncome?: string;
-  period?: string;
-  amount?: string;
-  category?: string;
-  description?: string;
-  receipt?: {
-    name: string;
-    type: string;
-    size: number;
-    uri: string;
-  } | null;
-  name?: string;
-  value?: string;
-  assetType?: string;
-  liabilityType?: string;
-};
-
-const screenWidth = Dimensions.get('window').width;
-
-// Entry types with icons and colors
-const ENTRY_TYPES = [
-
-  { label: 'Pendapatan', value: 'income', icon: 'arrow-up-outline', color: '#22c55e' },
-  { label: 'Pengeluaran', value: 'expense', icon: 'arrow-down-outline', color: '#ef4444' },
-  { label: 'Aset', value: 'asset', icon: 'cube-outline', color: '#3b82f6' },
-  { label: 'Liabiliti', value: 'liability', icon: 'git-branch-outline', color: '#f59e42' },
-  { label: 'Ekuiti', value: 'equity', icon: 'people-outline', color: '#a855f7' },
-];
-
-// Kategori untuk cashflow/expense
-const CATEGORIES = [
-  { label: 'Umum', value: 'umum', icon: 'flag-outline', color: '#3b82f6' },
-  { label: 'Transfer', value: 'transfer', icon: 'swap-horizontal-outline', color: '#0ea5e9' },
-  { label: 'Piutang', value: 'piutang', icon: 'document-text-outline', color: '#f59e42' },
-  { label: 'Makanan', value: 'makanan', icon: 'fast-food-outline', color: '#b45309' },
-  { label: 'Transportasi', value: 'transportasi', icon: 'car-outline', color: '#ef4444' },
-  { label: 'Elektronik', value: 'elektronik', icon: 'phone-portrait-outline', color: '#e11d48' },
-  { label: 'Kas', value: 'kas', icon: 'flag-outline', color: '#3b82f6' },
-];
-
-export default function DashboardScreen() {
-  const [entries, setEntries] = useState<BookkeepingEntry[]>([]);
-  const [selectedType, setSelectedType] = useState<string | null>(null);
+export default function SummaryTab() {
   const router = useRouter();
+  const navigation = useNavigation();
+  const { getTranslation, language, setLanguage, formatCurrency, currency, setCurrency } = useLanguage();
 
-  useEffect(() => {
-    loadEntries();
+  const [totalIncome, setTotalIncome] = React.useState(0);
+  const [totalExpense, setTotalExpense] = React.useState(0);
+  const [netProfit, setNetProfit] = React.useState(0);
+  const [lastMonthIncome, setLastMonthIncome] = React.useState(0);
+  const [lastMonthExpense, setLastMonthExpense] = React.useState(0);
+  const [loading, setLoading] = React.useState(true);
+  const [error, setError] = React.useState<string | null>(null);
+  const [firstName, setFirstName] = React.useState<string | null>(null);
+
+  // Helper function to get current month start and end dates
+  const getGreeting = () => {
+    const hour = new Date().getHours();
+    if (hour < 12) return getTranslation('greetingMorning');
+    if (hour < 18) return getTranslation('greetingAfternoon');
+    return getTranslation('greetingEvening');
+  };
+  
+
+  const getCurrentMonthRange = () => {
+    const now = new Date();
+    const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+    const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59);
+    return { startOfMonth, endOfMonth };
+  };
+
+  // Helper function to get previous month start and end dates
+  const getPreviousMonthRange = () => {
+    const now = new Date();
+    const startOfPrevMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+    const endOfPrevMonth = new Date(now.getFullYear(), now.getMonth(), 0, 23, 59, 59);
+    return { startOfPrevMonth, endOfPrevMonth };
+  };
+
+  // Helper function to filter data by date range
+  const filterDataByDateRange = (data: any[], startDate: Date, endDate: Date) => {
+    return data.filter((item: any) => {
+      const itemDate = new Date(item.incomeDate || item.spendDate || item.createdAt);
+      return itemDate >= startDate && itemDate <= endDate;
+    });
+  };
+
+  const fetchSummary = async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const incomeData = await incomeAPI.getIncome();
+      const expenseData = await spendingAPI.getSpending();
+
+      const incomes = incomeData?.data?.incomes || [];
+      const expenses = expenseData?.data?.spends || [];
+
+      // Get date ranges
+      const { startOfMonth, endOfMonth } = getCurrentMonthRange();
+      const { startOfPrevMonth, endOfPrevMonth } = getPreviousMonthRange();
+
+      // Filter current month data
+      const currentMonthIncomes = filterDataByDateRange(incomes, startOfMonth, endOfMonth);
+      const currentMonthExpenses = filterDataByDateRange(expenses, startOfMonth, endOfMonth);
+
+      // Filter previous month data
+      const previousMonthIncomes = filterDataByDateRange(incomes, startOfPrevMonth, endOfPrevMonth);
+      const previousMonthExpenses = filterDataByDateRange(expenses, startOfPrevMonth, endOfPrevMonth);
+
+      // Calculate totals
+      const currentMonthIncomeTotal = currentMonthIncomes.reduce((sum: number, item: any) => sum + (item.amount || 0), 0);
+      const currentMonthExpenseTotal = currentMonthExpenses.reduce((sum: number, item: any) => sum + (item.amount || 0), 0);
+      const previousMonthIncomeTotal = previousMonthIncomes.reduce((sum: number, item: any) => sum + (item.amount || 0), 0);
+      const previousMonthExpenseTotal = previousMonthExpenses.reduce((sum: number, item: any) => sum + (item.amount || 0), 0);
+
+      // Calculate net profit using new logic: Gross Profit - Expense - EBITDA (tax from income)
+      const currentMonthEBITDA = currentMonthIncomes.reduce((sum: number, item: any) => {
+        const amount = Number(item.amount || 0);
+        const taxPercentage = Number(item.incomeTax || 0);
+        return sum + (amount * (taxPercentage / 100));
+      }, 0);
+      const currentMonthNetProfit = currentMonthIncomeTotal - currentMonthExpenseTotal - currentMonthEBITDA;
+
+      const previousMonthEBITDA = previousMonthIncomes.reduce((sum: number, item: any) => {
+        const amount = Number(item.amount || 0);
+        const taxPercentage = Number(item.incomeTax || 0);
+        return sum + (amount * (taxPercentage / 100));
+      }, 0);
+      const previousMonthNetProfit = previousMonthIncomeTotal - previousMonthExpenseTotal - previousMonthEBITDA;
+
+      setTotalIncome(currentMonthIncomeTotal);
+      setTotalExpense(currentMonthExpenseTotal);
+      setNetProfit(currentMonthNetProfit);
+      setLastMonthIncome(previousMonthIncomeTotal);
+      setLastMonthExpense(previousMonthExpenseTotal);
+    } catch (err: any) {
+      setError(err.message || getTranslation('errorLoadingData'));
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const fetchProfile = async () => {
+    try {
+      const profile = await userAPI.getProfile();
+      console.log('Profile response:', profile);
+      if (profile && profile.data && profile.data.name) {
+        setFirstName(profile.data.name.split(' ')[0]);
+      }
+    } catch (err) {
+      console.log('Profile fetch error:', err);
+      setFirstName(null);
+    }
+  };
+
+  // Initial data fetch
+  React.useEffect(() => {
+    fetchSummary();
+    fetchProfile();
   }, []);
 
-  const loadEntries = async () => {
-    const data = await getEntries();
-    setEntries(data || []);
+  // Refresh data when page is focused (like donut chart)
+  useFocusEffect(
+    React.useCallback(() => {
+      fetchSummary();
+      fetchProfile();
+    }, [])
+  );
+
+  const handleLogout = async () => {
+    try {
+      await logout();
+      router.replace('/login');
+    } catch {
+      alert(getTranslation('errorLoginFailed'));
+    }
   };
 
-  // Summary
-  const totalMainIncome = entries.filter(e => e.type === 'income' && (e.category === 'main' || e.mainIncome)).reduce((sum, e) => sum + (e.category === 'main' ? Number(e.amount || 0) : Number(e.mainIncome || 0)), 0);
-  const totalSideIncome = entries.filter(e => e.type === 'income' && (e.category === 'side' || e.sideIncome)).reduce((sum, e) => sum + (e.category === 'side' ? Number(e.amount || 0) : Number(e.sideIncome || 0)), 0);
-  const totalIncome = totalMainIncome + totalSideIncome;
-  const totalExpense = entries.filter(e => e.type === 'expense').reduce((sum, e) => sum + Number(e.amount || 0), 0);
-  const netProfit = totalIncome - totalExpense;
-  const totalAssets = entries.filter(e => e.type === 'asset').reduce((sum, e) => sum + Number(e.value || 0), 0);
-  const totalLiabilities = entries.filter(e => e.type === 'liability').reduce((sum, e) => sum + Number(e.value || 0), 0);
-  const totalEquity = entries.filter(e => e.type === 'equity').reduce((sum, e) => sum + Number(e.value || 0), 0);
-
-  // Cashflow chart data (dummy grouping by month)
-  const months = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun'];
-  const incomeByMonth = [2000000, 4500000, 2800000, 8000000, 9900000, 4300000];
-  const expenseByMonth = [1000000, 2000000, 1500000, 3000000, 4000000, 2000000];
-  const chartData = {
-    labels: months,
-    datasets: [
-      {
-        data: incomeByMonth,
-        color: (opacity = 1) => `rgba(34,197,94,${opacity})`,
-        strokeWidth: 2,
+  React.useEffect(() => {
+    navigation.setOptions({
+      title: '',
+      headerStyle: {
+        backgroundColor: 'white',
+        elevation: 0,         // Android
+        shadowOpacity: 0,     // iOS
+        borderBottomWidth: 0, // Optional (iOS) to remove line
       },
-      {
-        data: expenseByMonth,
-        color: (opacity = 1) => `rgba(239,68,68,${opacity})`,
-        strokeWidth: 2,
-      },
-    ],
-    legend: ['Pendapatan', 'Pengeluaran'],
+      headerTitleStyle: { color: 'black', fontWeight: 'bold' },
+      headerTitleAlign: 'left',
+      headerTintColor: 'black',
+      headerLeft: () => (
+        <TouchableOpacity onPress={() => router.push('/profile')} style={{ marginLeft: 15 }}>
+          <Ionicons name="person-circle-outline" size={35} color="black" />
+        </TouchableOpacity>
+      ),
+      headerRight: () => (
+        <View style={{ flexDirection: 'row', alignItems: 'center', marginRight: 15 }}>
+          {['id', 'ms', 'en'].map((lang) => {
+            const isSelected = language === lang;
+            return (
+              <TouchableOpacity
+                key={lang}
+                onPress={() => setLanguage(lang as Language)}
+                style={{
+                  paddingHorizontal: 8,
+                  paddingVertical: 4,
+                  marginRight: 4,
+                  borderRadius: 6,
+                  backgroundColor: isSelected ? 'black' : 'white',
+                  borderWidth: 0,
+                  borderColor: '#d4d4d8',
+                }}
+              >
+                <CustomText
+                  style={{
+                    color: isSelected ? 'white' : 'black',
+                    fontSize: 12,
+                    fontWeight: isSelected ? 'bold' : 'normal',
+                  }}
+                >
+                  {lang.toUpperCase()}
+                </CustomText>
+              </TouchableOpacity>
+            );
+          })}
+        </View>
+      )
+      
+    });
+  }, [navigation, language]);
+  
+  const renderChangeText = (current: number, previous: number, type: 'income' | 'expense') => {
+    const diff = current - previous;
+    const percentage = previous === 0 ? 0 : (diff / previous) * 100;
+    const rounded = percentage.toFixed(1);
+    if (percentage > 0) {
+      return getTranslation('changeUp').replace('{x}', rounded);
+    }
+    if (percentage < 0) {
+      return getTranslation('changeDown').replace('{x}', Math.abs(+rounded).toString());
+    }
+    return getTranslation('changeNoChange');
   };
-
-  // Filtered entries for list
-  const filteredEntries = entries.filter((item) =>
-    selectedType === null ? true : item.type === selectedType
-  ).sort((a, b) => (b.date > a.date ? 1 : -1));
 
   return (
     <SafeAreaView className="flex-1 bg-white">
-      <ScrollView className="flex-1">
+      <ScrollView className="flex-1 -mt-[25px] mb-[50px]">
         <View className="p-4">
-          <CustomText className="text-2xl font-bold text-center mb-4">Summary</CustomText>
 
-          {/* Summary Section */}
-          <View className="bg-[#232323] rounded-2xl p-5 mb-6">
-            <View className="flex-row flex-wrap -mx-2">
-              <View className="w-1/2 px-2 mb-4">
-                <View className="bg-[#2e2e2e] rounded-xl p-4 items-center">
-                  <Ionicons name="arrow-up" size={22} color="#22c55e" />
-                  <CustomText className="text-xs text-white mt-1">Pendapatan</CustomText>
-                  <CustomText className="text-lg font-bold text-[#22c55e]" numberOfLines={1} ellipsizeMode="tail">Rp {typeof totalIncome === 'number' ? totalIncome.toLocaleString('id-ID', { maximumFractionDigits: 2 }) : totalIncome}</CustomText>
-                </View>
+          {/* Greeting for Accounting App */}
+          <View className="mb-6">
+            <View className="flex-row justify-between items-center mb-2">
+              <CustomText className="text-[15px] font-semibold text-[#393E46] pb-[3px]">
+                {getGreeting()} 
+              </CustomText>
+              <View className="bg-gray-100 px-3 py-1 rounded-full">
+                <CustomText className="text-[12px] font-medium text-gray-600">
+                  {currency}
+                </CustomText>
               </View>
-              <View className="w-1/2 px-2 mb-4">
-                <View className="bg-[#2e2e2e] rounded-xl p-4 items-center">
-                  <Ionicons name="arrow-down" size={22} color="#ef4444" />
-                  <CustomText className="text-xs text-white mt-1">Pengeluaran</CustomText>
-                  <CustomText className="text-lg font-bold text-[#ef4444]" numberOfLines={1} ellipsizeMode="tail">Rp {typeof totalExpense === 'number' ? totalExpense.toLocaleString('id-ID', { maximumFractionDigits: 2 }) : totalExpense}</CustomText>
-                </View>
+            </View>
+            <CustomText className="text-[50px] font-bold text-[#18181b] mb-1">
+              {firstName ? `${firstName}` : ''}
+            </CustomText>
+            
+          </View>
+
+
+          {/* Summary Cards */}
+          <View className="flex-row flex-wrap justify-between mb-6">
+            {/* Income */}
+            <View className="w-[48%] bg-[#1f1f1f] rounded-2xl p-4 relative">
+              <TouchableOpacity
+                className="absolute right-2 top-2 w-8 h-8 items-center justify-center"
+                onPress={() => router.push({ pathname: '/modals/entry-type-list', params: { type: 'income' } })}
+                style={{ backgroundColor: 'rgba(255,255,255,0.1)', borderRadius: 8 }}
+              >
+                <Ionicons name="chevron-forward" size={16} color="#a1a1aa" />
+              </TouchableOpacity>
+              <CustomText className="text-xs text-white mb-1">
+                {getTranslation('income') || 'Pendapatan'}
+              </CustomText>
+              <CustomText className="text-2xl font-bold text-[#22c55e] mb-1">
+                {formatCurrency(totalIncome)}
+              </CustomText>
+              <CustomText className="text-[10px] text-white">{renderChangeText(totalIncome, lastMonthIncome, 'income')}</CustomText>
+            </View>
+
+            {/* Expense */}
+            <View className="w-[48%] bg-[#1f1f1f] rounded-2xl p-4 relative">
+              <TouchableOpacity
+                className="absolute right-2 top-2 w-8 h-8 items-center justify-center"
+                onPress={() => router.push({ pathname: '/modals/entry-type-list', params: { type: 'expense' } })}
+                style={{ backgroundColor: 'rgba(255,255,255,0.1)', borderRadius: 8 }}
+              >
+                <Ionicons name="chevron-forward" size={16} color="#a1a1aa" />
+              </TouchableOpacity>
+              <CustomText className="text-xs text-white mb-1">
+                {getTranslation('expense') || 'Pengeluaran'}
+              </CustomText>
+              <CustomText className="text-2xl font-bold text-[#ef4444] mb-1">
+                {formatCurrency(totalExpense)}
+              </CustomText>
+              <CustomText className="text-[10px] text-white">{renderChangeText(totalExpense, lastMonthExpense, 'expense')}</CustomText>
+            </View>
+
+            {/* Net Profit */}
+            <View className="w-full bg-[#1f1f1f] rounded-2xl p-4 mt-4 flex-row justify-between items-center">
+              <View>
+                <CustomText className="text-xs text-white mb-1">
+                  {getTranslation('netProfit') || 'Untung Bersih'}
+                </CustomText>
+                <CustomText
+                  className="text-2xl font-bold"
+                  style={{ color: netProfit > 0 ? '#22c55e' : netProfit < 0 ? '#ef4444' : 'white' }}
+                >
+                  {formatCurrency(netProfit)}
+                </CustomText>
               </View>
-              <View className="w-1/2 px-2 mb-4">
-                <View className="bg-[#2e2e2e] rounded-xl p-4 items-center">
-                  <Ionicons name="wallet" size={22} color="#22c55e" />
-                  <CustomText className="text-xs text-white mt-1">Untung Bersih</CustomText>
-                  <CustomText className="text-lg font-bold text-[#22c55e]" numberOfLines={1} ellipsizeMode="tail">Rp {typeof netProfit === 'number' ? netProfit.toLocaleString('id-ID', { maximumFractionDigits: 2 }) : netProfit}</CustomText>
-                </View>
-              </View>
-              <View className="w-1/2 px-2 mb-4">
-                <View className="bg-[#2e2e2e] rounded-xl p-4 items-center">
-                  <Ionicons name="cube" size={22} color="#3b82f6" />
-                  <CustomText className="text-xs text-white mt-1">Aset</CustomText>
-                  <CustomText className="text-lg font-bold text-[#3b82f6]" numberOfLines={1} ellipsizeMode="tail">Rp {typeof totalAssets === 'number' ? totalAssets.toLocaleString('id-ID', { maximumFractionDigits: 2 }) : totalAssets}</CustomText>
-                </View>
-              </View>
-              <View className="w-1/2 px-2 mb-4">
-                <View className="bg-[#2e2e2e] rounded-xl p-4 items-center">
-                  <Ionicons name="git-branch" size={22} color="#f59e42" />
-                  <CustomText className="text-xs text-white mt-1">Liabiliti</CustomText>
-                  <CustomText className="text-lg font-bold text-[#f59e42]" numberOfLines={1} ellipsizeMode="tail">Rp {typeof totalLiabilities === 'number' ? totalLiabilities.toLocaleString('id-ID', { maximumFractionDigits: 2 }) : totalLiabilities}</CustomText>
-                </View>
-              </View>
-              <View className="w-1/2 px-2 mb-4">
-                <View className="bg-[#2e2e2e] rounded-xl p-4 items-center">
-                  <Ionicons name="people" size={22} color="#a855f7" />
-                  <CustomText className="text-xs text-white mt-1">Ekuiti</CustomText>
-                  <CustomText className="text-lg font-bold text-[#a855f7]" numberOfLines={1} ellipsizeMode="tail">Rp {typeof totalEquity === 'number' ? totalEquity.toLocaleString('id-ID', { maximumFractionDigits: 2 }) : totalEquity}</CustomText>
-                </View>
-              </View>
+              <Ionicons
+                name={netProfit > 0 ? 'trending-up' : netProfit < 0 ? 'trending-down' : 'remove-outline'}
+                size={26}
+                color={netProfit > 0 ? '#22c55e' : netProfit < 0 ? '#ef4444' : 'white'}
+              />
             </View>
           </View>
 
-{/* Cashflow Chart */}
-<View className="bg-[#232323] p-4 rounded-2xl mb-6">
-  <CustomText className="text-lg font-semibold mb-4 text-white">
-    Grafik Aliran Tunai
-  </CustomText>
-  <LineChart
-    data={chartData}
-    width={screenWidth - 48}
-    height={180}
-    chartConfig={{
-      backgroundColor: '#232323',
-      backgroundGradientFrom: '#232323',
-      backgroundGradientTo: '#232323',
-      decimalPlaces: 0,
-      color: (opacity = 1) => `rgba(59, 130, 246, ${opacity})`, // garis biru
-      labelColor: (opacity = 1) => `rgba(209,213,219,${opacity})`, // label abu muda
-      style: {
-        borderRadius: 12,
-      },
-      propsForDots: {
-        r: '4',
-        strokeWidth: '2',
-        stroke: '#22c55e', // dot hijau terang
-      },
-      propsForBackgroundLines: {
-        stroke: '#444', // garis grid lebih gelap
-      },
-    }}
-    bezier
-    style={{
-      marginVertical: 4,
-      borderRadius: 12,
-    }}
-    withInnerLines={false}
-    withOuterLines={false}
-    withShadow={false}
-  />
-</View>
-
-          {/* ENTRY_TYPES Card List */}
-          <View className="bg-white rounded-2xl shadow-sm mb-[70px]">
-            {ENTRY_TYPES.map((type, idx) => (
-              <TouchableOpacity
-                key={type.value}
-                className={`flex-row items-center px-4 py-4 ${idx !== ENTRY_TYPES.length - 1 ? 'border-b border-gray-100' : ''}`}
-                onPress={() => router.push({ pathname: '/modals/entry-type-list', params: { type: type.value } })}
-              >
-                <View className="w-10 h-10 rounded-full items-center justify-center mr-4" style={{ backgroundColor: type.color + '22' }}>
-                  <Ionicons name={type.icon as any} size={26} color={type.color} />
-                </View>
-                <CustomText className="flex-1 text-base font-semibold text-gray-800">{type.label}</CustomText>
-                <Ionicons name="chevron-forward" size={20} color="#9ca3af" />
-              </TouchableOpacity>
-            ))}
-          </View>
+          {/* Chart */}
+          <NetProfitChart />
         </View>
       </ScrollView>
     </SafeAreaView>
